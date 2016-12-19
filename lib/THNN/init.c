@@ -83,6 +83,9 @@
 #include "generic/ELU.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/LinearSparse.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/HardShrink.c"
 #include "THGenerateFloatTypes.h"
 

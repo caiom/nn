@@ -49,8 +49,21 @@ function nn.utils.recursiveType(param, type, tensorCache)
          if tensorCache[param] then
             newparam = tensorCache[param]
          else
-            newparam = torch.Tensor():type(type)
-            local storageType = type:gsub('Tensor','Storage')
+            local storageType
+            if 'torch.IntTensor' == torch.typename(param) and type == 'torch.CudaTensor' then
+		newparam = torch.Tensor():type('torch.CudaIntTensor')
+                storageType = 'torch.CudaIntStorage'
+            elseif 'torch.IntTensor' == torch.typename(param) then
+                newparam = torch.Tensor():type('torch.IntTensor')
+                storageType = 'torch.IntStorage'
+            elseif 'torch.CudaIntTensor' == torch.typename(param) then
+                newparam = torch.Tensor():type('torch.CudaIntTensor')
+                storageType = 'torch.CudaIntStorage'
+	    else
+		newparam = torch.Tensor():type(type)
+                storageType = type:gsub('Tensor','Storage')
+	    end
+            print ("Converting tensor from " .. param:type() .. " to " .. newparam:type())
             if param:storage() then
                local storage_key = torch.pointer(param:storage())
                if not tensorCache[storage_key] then
@@ -67,7 +80,15 @@ function nn.utils.recursiveType(param, type, tensorCache)
             end
             tensorCache[param] = newparam
          end
-         assert(torch.type(newparam) == type)
+         if 'torch.IntTensor' == torch.typename(param) and type == 'torch.CudaTensor' then
+	    assert(torch.type(newparam) == 'torch.CudaIntTensor')
+         elseif 'torch.IntTensor' == torch.typename(param) then
+            assert(torch.type(newparam) == 'torch.IntTensor')
+         elseif 'torch.CudaIntTensor' == torch.typename(param) then
+            assert(torch.type(newparam) == 'torch.CudaIntTensor')
+	 else
+            assert(torch.type(newparam) == type)
+         end
          param = newparam
       end
    end

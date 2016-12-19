@@ -156,6 +156,37 @@ TH_API void THNN_(LeakyReLU_updateGradInput)(
           real negval,                 // negative part slope
           bool inplace);               // if true, modifies gradOutput and sets gradInput onto it (no additional memory is allocated)
 
+TH_API void THNN_(LinearSparse_updateOutput)(
+           THNNState * state,
+           THTensor * inputT,
+           THTensor * outputT,
+           THTensor * weightT,
+           THIntegerTensor * rowsT,
+           THIntegerTensor * colsT,
+           THIntegerTensor * iRowStart,
+           int nRowWeight,
+           int nColWeight);
+TH_API void THNN_(LinearSparse_updateGradInput)(
+           THNNState * state,
+           THTensor * inputDummy,
+           THTensor * inputT,
+           THTensor * outputT,
+           THTensor * weightT,
+           THIntegerTensor * rowsT,
+           THIntegerTensor * colsT,
+           int nRowWeight,
+           int nColWeight,
+           THIntegerTensor * iRowStartT);
+TH_API void THNN_(LinearSparse_accGradParameters)(
+           THNNState * state,
+           THTensor * inputT,
+           THTensor * gradOutT,
+           THTensor * gradWeightT,
+           THIntegerTensor * rowsT,
+           THIntegerTensor * colsT,
+	       int nnz,
+           float scale);
+
 TH_API void THNN_(LogSigmoid_updateOutput)(
           THNNState *state,            // library's state
           THTensor *input,             // input tensor
