@@ -2,6 +2,52 @@
 #define TH_GENERIC_FILE "generic/TemporalMaxPooling.c"
 #else
 
+static inline void THNN_(TemporalMaxPooling_shapeCheck)(
+                         THNNState *state,
+                         THTensor *input,
+                         THTensor *gradOutput,
+                         THIndexTensor *indices,
+                         int kW,
+                         int dW) {
+  long niframe;
+  long framesize;
+  long noframe;
+
+  int dimS = 0; // sequence dimension
+  int dimF = 1; // feature dimension
+  int ndims = input->nDimension;
+
+  if (input->nDimension == 3)
+  {
+    dimS = 1;
+    dimF = 2;
+  }
+
+  niframe = input->size[dimS];
+  framesize = input->size[dimF];
+  noframe = (niframe - kW) / dW + 1;
+
+  THArgCheck(kW > 0, 5,
+             "kernel size should be greater than zero, but got kW: %d", kW);
+  THArgCheck(dW > 0, 6,
+             "stride should be greater than zero, but got dW: %d", dW);
+
+  THNN_ARGCHECK(input->nDimension == 2 || input->nDimension == 3, 2, input,
+                  "2D or 3D (batch mode) tensor expected for input, but got: %s");
+  THArgCheck(input->size[dimS] >= kW, 2,
+             "input sequence smaller than kernel size. Got: %d, Expected: %d",
+             input->size[dimS], kW);
+
+  if (gradOutput != NULL) {
+    THNN_CHECK_DIM_SIZE(gradOutput, ndims, dimS, noframe);
+    THNN_CHECK_DIM_SIZE(gradOutput, ndims, dimF, framesize)
+  }
+  if (indices != NULL) {
+    THNN_CHECK_DIM_SIZE_INDICES(indices, ndims, dimS, noframe);
+    THNN_CHECK_DIM_SIZE_INDICES(indices, ndims, dimF, framesize);
+  }
+}
+
 void THNN_(TemporalMaxPooling_updateOutput)(
           THNNState *state,
           THTensor *input,
@@ -23,14 +69,13 @@ void THNN_(TemporalMaxPooling_updateOutput)(
   int dimS = 0; // sequence dimension
   int dimF = 1; // feature dimension
 
-  THArgCheck(input->nDimension == 2 || input->nDimension == 3, 2, "2D or 3D(batch mode) tensor expected");
+  THNN_(TemporalMaxPooling_shapeCheck)(state, input, NULL, NULL, kW, dW);
 
   if (input->nDimension == 3)
   {
     dimS = 1;
     dimF = 2;
   }
-  THArgCheck(input->size[dimS] >= kW, 2, "input sequence smaller than kernel size");
 
   /* sizes */
   niframe = input->size[dimS];
@@ -159,6 +204,7 @@ void THNN_(TemporalMaxPooling_updateGradInput)(
 
   long t, y;
 
+  THNN_(TemporalMaxPooling_shapeCheck)(state, input, gradOutput, indices, kW, dW);
   /* get contiguous gradOutput */
   gradOutput = THTensor_(newContiguous)(gradOutput);
 

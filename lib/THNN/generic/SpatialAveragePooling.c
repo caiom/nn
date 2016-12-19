@@ -26,10 +26,6 @@ static inline void THNN_(SpatialAveragePooling_shapeCheck)(
   THNN_ARGCHECK(ndim == 3 || ndim == 4, 2, input,
 		"3D or 4D input tensor expected but got: %s");
 
-  THArgCheck(input->size[dimw] >= kW - padW && input->size[dimh] >= kH - padH, 2,
-	     "input image (H: %d, W: %d) smaller than kernel "
-	     "size - padding( kH: %d padH: %d kW: %d padW: %d",
-	     input->size[dimh], input->size[dimw], kH, padH, kW, padW);
   THArgCheck(kW/2 >= padW && kH/2 >= padH, 2,
 	     "pad should be smaller than half of kernel size, but got "
 	     "padW = %d, padH = %d, kW = %d, kH = %d",
@@ -50,6 +46,16 @@ static inline void THNN_(SpatialAveragePooling_shapeCheck)(
   {
     outputHeight = (long)(floor((float)(inputHeight - kH + 2*padH) / dH)) + 1;
     outputWidth  = (long)(floor((float)(inputWidth  - kW + 2*padW) / dW)) + 1;
+  }
+
+  if (padW || padH)
+  {
+    // ensure that the last pooling starts inside the image
+    // needed to avoid problems in ceil mode
+    if ((outputHeight - 1)*dH >= inputHeight + padH)
+      --outputHeight;
+    if ((outputWidth  - 1)*dW >= inputWidth  + padW)
+      --outputWidth;
   }
 
   if (outputWidth < 1 || outputHeight < 1)
@@ -126,11 +132,6 @@ void THNN_(SpatialAveragePooling_updateOutput)(
     if ((outputWidth  - 1)*dW >= inputWidth  + padW)
       --outputWidth;
   }
-
-  THArgCheck(inputWidth >= kW - 2 * padW && inputHeight >= kH - 2 * padH, 2,
-	     "input image smaller than (kernel size - 2 * padW). Got "
-	     "inputHeight: %d inputWidth: %d kH %d kW %d padH %d padW %d",
-	     inputHeight, inputWidth, kH, kW, padH, padW);
 
   if (input->nDimension == 3)
     THTensor_(resize3d)(output, nInputPlane, outputHeight, outputWidth);

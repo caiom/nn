@@ -83,14 +83,14 @@ If the input sequence is a 3D tensor of dimension `nBatchFrame x nInputFrame x i
 `nBatchFrame x nOutputFrame x outputFrameSize`.
 
 The parameters of the convolution can be found in `self.weight` (Tensor of
-size `outputFrameSize x (inputFrameSize x kW) `) and `self.bias` (Tensor of
+size `outputFrameSize x (kW x inputFrameSize) `) and `self.bias` (Tensor of
 size `outputFrameSize`). The corresponding gradients can be found in
 `self.gradWeight` and `self.gradBias`.
 
 For a 2D input, the output value of the layer can be precisely described as:
 ```lua
 output[t][i] = bias[i]
-  + sum_j sum_{k=1}^kW weight[i][j][k]
+  + sum_j sum_{k=1}^kW weight[i][k][j]
                                 * input[dW*(t-1)+k)][j]
 ```
 
@@ -190,7 +190,7 @@ size `inputFrameSize`). The corresponding gradients can be found in
 
 The output value of the layer can be precisely described as:
 ```lua
-output[i][t] = bias[i] + weight[i] * sum_{k=1}^kW input[i][dW*(t-1)+k)]
+output[t][i] = bias[i] + weight[i] * sum_{k=1}^kW input[dW*(t-1)+k][i]
 ```
 
 <a name="nn.LookupTable"></a>
@@ -345,8 +345,8 @@ The parameters are the following:
   * `kH`: The kernel height of the convolution
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `padW`, a good number is `(kH-1)/2`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
@@ -438,8 +438,8 @@ The parameters are the following:
   * `kH`: The kernel height of the convolution
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
   * `adjW`: Extra width to add to the output image. Default is `0`. Cannot be greater than dW-1.
   * `adjH`: Extra height to add to the output image. Default is `0`. Cannot be greater than dH-1.
 
@@ -470,8 +470,8 @@ The parameters are the following:
   * `kH`: The kernel height of the convolution
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
   * `dilationW`: The number of pixels to skip. Default is `1`. `1` makes it a SpatialConvolution
   * `dilationH`: The number of pixels to skip. Default is `1`. `1` makes it a SpatialConvolution
 
@@ -505,8 +505,8 @@ The parameters are the following:
   * `kH`: The kernel height.
   * `dW`: The step in the width dimension. Default is `1`.
   * `dH`: The step in the height dimension. Default is `1`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`.
 
 If the input image is a 3D tensor `nInputPlane x iH x iW`, the output image size
 will be `nOutputPlane x oH x oW` where
@@ -923,10 +923,9 @@ The parameters are the following:
   * `dT`: The step of the convolution in the time dimension. Default is `1`.
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padT`: The additional zeros added per time to the input planes. Default is `0`, a good number is `(kT-1)/2`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
-
+  * `padT`: Additional zeros added to the input plane data on both sides of time axis. Default is `0`. `(kT-1)/2` is often used here.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
@@ -949,7 +948,7 @@ size `nOutputPlane`). The corresponding gradients can be found in
 ### VolumetricFullConvolution ###
 
 ```lua
-module = nn.VolumetricFullConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH])
+module = nn.VolumetricFullConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH], [adjT], [adjW], [adjH])
 ```
 
 Applies a 3D full convolution over an input image composed of several input planes. The `input` tensor in
@@ -967,16 +966,19 @@ The parameters are the following:
 * `dT`: The step of the convolution in the depth dimension. Default is `1`.
 * `dW`: The step of the convolution in the width dimension. Default is `1`.
 * `dH`: The step of the convolution in the height dimension. Default is `1`.
-* `padT`: The additional zeros added per depth to the input planes. Default is `0`, a good number is `(kT-1)/2`.
-* `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-* `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+* `padT`: Additional zeros added to the input plane data on both sides of time (depth) axis. Default is `0`. `(kT-1)/2` is often used here.
+* `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+* `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
+* `adjT`: Extra depth to add to the output image. Default is `0`.  Cannot be greater than dT-1.
+* `adjW`: Extra width to add to the output image. Default is `0`. Cannot be greater than dW-1.
+* `adjH`: Extra height to add to the output image. Default is `0`. Cannot be greater than dH-1.
 
 If the input image is a 3D tensor `nInputPlane x depth x height x width`, the output image size
 will be `nOutputPlane x odepth x oheight x owidth` where
 ```lua
-odepth  = (depth  - 1) * dT - 2*padT + kT
-owidth  = (width  - 1) * dW - 2*padW + kW
-oheight = (height - 1) * dH - 2*padH + kH
+odepth  = (depth  - 1) * dT - 2*padT + kT + adjT
+owidth  = (width  - 1) * dW - 2*padW + kW + adjW
+oheight = (height - 1) * dH - 2*padH + kH + adjH
 ```
 
 <a name="nn.VolumetricDilatedConvolution"></a>
@@ -998,9 +1000,9 @@ The parameters are the following:
   * `dT`: The step of the convolution in the depth dimension. Default is `1`.
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padT`: The additional zeros added per depth to the input planes. Default is `0`, a good number is `(kT-1)/2`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `padT`: Additional zeros added to the input plane data on both sides of time (depth) axis. Default is `0`. `(kT-1)/2` is often used here.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
   * `dilationT`: The number of pixels to skip. Default is `1`. `1` makes it a VolumetricConvolution
   * `dilationW`: The number of pixels to skip. Default is `1`. `1` makes it a VolumetricConvolution
   * `dilationH`: The number of pixels to skip. Default is `1`. `1` makes it a VolumetricConvolution
