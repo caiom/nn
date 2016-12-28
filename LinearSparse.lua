@@ -50,12 +50,9 @@ istart = 1
   return weights, rows, cols, iRowStart
 end
 
-function CreateAndPrepareWeights(nRows, nCols, nChannels, nChannelsOut)
+function CreateAndPrepareWeights(nRows, nCols, nChannels, nChannelsOut, rows, cols)
 
   local outputSize = nCols*nRows*nChannelsOut
-  os.execute("python /home/ubuntu/testsnewlayer/createSPM.py " .. nCols .. " " .. nRows .. " " .. nChannels .. " " .. nChannelsOut)
-  local rows = npy4th.loadnpy("/home/ubuntu/rows.npy")
-  local cols = npy4th.loadnpy("/home/ubuntu/cols.npy")
 
   nElements = (#rows)[1]
 
@@ -86,14 +83,12 @@ function CreateAndPrepareWeights(nRows, nCols, nChannels, nChannelsOut)
   return weights, rows, cols, iRowStart
 end
 
-function LinearSparse:__init(imgWidth, imgHeight, nChannels, nChannelsOut, bias)
+function LinearSparse:__init(imgWidth, imgHeight, nChannels, nChannelsOut, rows, cols, bias)
    parent.__init(self)
    local bias = ((bias == nil) and true) or bias
 
    local outputSize = imgWidth*imgHeight*nChannelsOut
-   self.weight, self.rows, self.cols, self.iRowStart = CreateAndPrepareWeights(imgHeight, imgWidth, nChannels, nChannelsOut)
-   --self.weight, self.cols, self.iRowStart = CreateAndPrepareWeights(imgHeight, imgWidth, nChannels)
-   --self.rows = torch.Tensor(1):int()
+   self.weight, self.rows, self.cols, self.iRowStart = CreateAndPrepareWeights(imgHeight, imgWidth, nChannels, nChannelsOut, rows, cols)
    self.nnz = self.weight:size(1)
    self.gradWeight = torch.Tensor(self.nnz)
    self.nRows = imgWidth*imgHeight*nChannelsOut
