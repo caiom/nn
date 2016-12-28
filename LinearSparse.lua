@@ -53,9 +53,9 @@ end
 function CreateAndPrepareWeights(nRows, nCols, nChannels, nChannelsOut)
 
   local outputSize = nCols*nRows*nChannelsOut
-  os.execute("python /home/caiom/testsnewlayer/createSPM.py " .. nCols .. " " .. nRows .. " " .. nChannels .. " " .. nChannelsOut)
-  local rows = npy4th.loadnpy("/media/caiom/HB 1TB PENTA/tempsparse/rows.npy")
-  local cols = npy4th.loadnpy("/media/caiom/HB 1TB PENTA/tempsparse/cols.npy")
+  os.execute("python /home/ubuntu/testsnewlayer/createSPM.py " .. nCols .. " " .. nRows .. " " .. nChannels .. " " .. nChannelsOut)
+  local rows = npy4th.loadnpy("/home/ubuntu/rows.npy")
+  local cols = npy4th.loadnpy("/home/ubuntu/cols.npy")
 
   nElements = (#rows)[1]
 
