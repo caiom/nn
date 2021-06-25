@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/torch/nn.svg?branch=master)](https://travis-ci.org/torch/nn)
 <a name="nn.dok"></a>
 # Neural Network Package #
-
+c
 This package provides an easy and modular way to build and train simple or complex neural networks using [Torch](https://github.com/torch/torch7/blob/master/README.md):
  * Modules are the bricks used to build neural networks. Each are themselves neural networks, but can be combined with other networks using containers to create complex neural networks:
    * [Module](doc/module.md#nn.Module): abstract class inherited by all modules;
